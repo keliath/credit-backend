@@ -1,0 +1,53 @@
+# Build Folders
+[Bb]in/
+[Oo]bj/
+**/bin/
+**/obj/
+
+# VS Code
+.vscode/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.VC.db
+
+# Rider
+.idea/
+
+# Azure Pipelines
+*.azure-pipelines.yml
+
+# DotNet local tools
+.tools/
+
+# DotNet publish
+publish/
+
+# NuGet
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+# except build/, which is used as an MSBuild target.
+!**/packages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+#!**/packages/repositories.config
+
+# SQL Server LocalDB
+*.mdf
+*.ldf
+
+# EF Migrations
+**/Migrations/
+
+# Logs
+*.log
+
+# OS generated
+.DS_Store
+Thumbs.db
