@@ -1,11 +1,22 @@
-namespace CreditApp.Domain.Abstractions;
+using System;
 
-public abstract class Entity
+namespace CreditApp.Domain.Abstractions
 {
-    public Guid Id { get; init; }
-
-    protected Entity(Guid id)
+    public abstract class Entity
     {
-        Id = id;
+        public Guid Id { get; protected set; }
+        public DateTime CreatedAt { get; protected set; }
+        public DateTime? UpdatedAt { get; protected set; }
+
+        protected Entity()
+        {
+            Id = Guid.NewGuid();
+            CreatedAt = DateTime.UtcNow;
+        }
+
+        protected void UpdateTimestamp()
+        {
+            UpdatedAt = DateTime.UtcNow;
+        }
     }
-}
+} 
