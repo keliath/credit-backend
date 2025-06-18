@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CreditApp.Application.DTOs;
 using CreditApp.Application.Services;
+using System.Security.Claims;
 
 namespace CreditApp.API.Controllers
 {
@@ -24,6 +25,22 @@ namespace CreditApp.API.Controllers
             try
             {
                 var response = await _authService.LoginAsync(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("whoami")]
+        public async Task<ActionResult<AuthResponse>> WhoAmI()
+        {
+            try
+            {
+                var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var response = await _authService.GetCurrentUserAsync(userId);
                 return Ok(response);
             }
             catch (Exception ex)

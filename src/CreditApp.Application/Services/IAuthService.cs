@@ -9,5 +9,6 @@ namespace CreditApp.Application.Services
         Task<AuthResponse> LoginAsync(LoginRequest request);
         Task<AuthResponse> RegisterAnalystAsync(RegisterRequest request);
         Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
+        Task<AuthResponse> GetCurrentUserAsync(Guid userId);
     }
 } 

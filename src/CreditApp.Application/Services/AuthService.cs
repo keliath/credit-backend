@@ -129,6 +129,19 @@ namespace CreditApp.Application.Services
             return true;
         }
 
+        public async Task<AuthResponse> GetCurrentUserAsync(Guid userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException("User not found");
+
+            if (!user.IsActive)
+                throw new InvalidOperationException("Account is deactivated");
+
+            var token = GenerateJwtToken(user);
+            return new AuthResponse(token, user.Username, user.Email, user.Role.ToString());
+        }
+
         private string GenerateJwtToken(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
