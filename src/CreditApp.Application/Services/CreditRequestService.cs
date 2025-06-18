@@ -58,19 +58,18 @@ namespace CreditApp.Application.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<CreditRequest>> GetAllAsync()
+        public async Task<IEnumerable<CreditRequest>> GetAllAsync(string? status = null)
         {
-            return await _context.CreditRequests
+            var query = _context.CreditRequests
                 .Include(cr => cr.User)
-                .OrderByDescending(cr => cr.CreatedAt)
-                .ToListAsync();
-        }
+                .AsQueryable();
 
-        public async Task<IEnumerable<CreditRequest>> GetByStatusAsync(string status)
-        {
-            return await _context.CreditRequests
-                .Include(cr => cr.User)
-                .Where(cr => cr.Status == status)
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(cr => cr.Status == status);
+            }
+
+            return await query
                 .OrderByDescending(cr => cr.CreatedAt)
                 .ToListAsync();
         }

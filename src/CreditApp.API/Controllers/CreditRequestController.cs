@@ -8,7 +8,7 @@ using CreditApp.Domain.Entities;
 
 namespace CreditApp.API.Controllers
 {
-    // [Authorize]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CreditRequestController : ControllerBase
@@ -63,9 +63,9 @@ namespace CreditApp.API.Controllers
 
         [Authorize(Roles = "Analyst")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CreditRequest>>> GetAll()
+        public async Task<ActionResult<IEnumerable<CreditRequest>>> GetAll([FromQuery] string? status = null)
         {
-            var response = await _creditRequestService.GetAllAsync();
+            var response = await _creditRequestService.GetAllAsync(status);
             return Ok(response);
         }
 
@@ -74,14 +74,6 @@ namespace CreditApp.API.Controllers
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var response = await _creditRequestService.GetByUserIdAsync(userId);
-            return Ok(response);
-        }
-
-        [Authorize(Roles = "Analyst")]
-        [HttpGet("status/{status}")]
-        public async Task<ActionResult<IEnumerable<CreditRequest>>> GetByStatus(string status)
-        {
-            var response = await _creditRequestService.GetByStatusAsync(status);
             return Ok(response);
         }
 

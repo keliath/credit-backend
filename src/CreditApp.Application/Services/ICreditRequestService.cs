@@ -19,8 +19,7 @@ namespace CreditApp.Application.Services
 
         Task<CreditRequest> GetByIdAsync(Guid id);
         Task<IEnumerable<CreditRequest>> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<CreditRequest>> GetAllAsync();
-        Task<IEnumerable<CreditRequest>> GetByStatusAsync(string status);
+        Task<IEnumerable<CreditRequest>> GetAllAsync(string? status = null);
         Task<CreditRequest> UpdateStatusAsync(
             Guid id,
             string newStatus,
