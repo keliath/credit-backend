@@ -1,99 +1,59 @@
-# Sistema de Gestión de Créditos
+# CreditApp Backend
 
-## Descripción
-Sistema de gestión de créditos desarrollado siguiendo los principios de Domain-Driven Design (DDD) y Clean Architecture. Permite a los usuarios solicitar créditos y a los analistas revisar y aprobar/rechazar las solicitudes.
+Backend para la gestión de solicitudes de crédito con autenticación JWT, roles, auditoría automática y arquitectura limpia basada en MediatR.
 
-## Características Principales
-- Autenticación y autorización basada en roles (Usuario, Analista, Administrador)
-- Gestión de solicitudes de crédito
-- Validación de datos y reglas de negocio
-- Auditoría de acciones
-- API RESTful
-- Base de datos SQL Server
-- Arquitectura limpia y mantenible
+## Características principales
+- API RESTful para gestión de usuarios y solicitudes de crédito
+- Autenticación y autorización con JWT
+- Roles: Solicitante y Analista
+- Auditoría automática de todas las operaciones críticas (login, registro, CRUD de solicitudes)
+- Paginación en endpoints de listados
+- Arquitectura limpia con MediatR para comandos y queries
 
-## Tecnologías Utilizadas
-- .NET 8
-- Entity Framework Core
-- SQL Server
-- JWT para autenticación
-- BCrypt para hash de contraseñas
-- Swagger/OpenAPI para documentación
+---
 
-## Estructura del Proyecto
-```
-src/
-├── CreditApp.API/              # Capa de presentación (API)
-├── CreditApp.Application/      # Capa de aplicación (casos de uso)
-├── CreditApp.Domain/          # Capa de dominio (entidades y reglas)
-└── CreditApp.Infrastructure/  # Capa de infraestructura (persistencia)
-```
+## Requisitos
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- SQL Server (local o remoto)
 
-## Requisitos Previos
-- .NET 8 SDK
-- SQL Server
-- Visual Studio 2022 o VS Code
+---
 
-## Configuración del Entorno
+## Instalación y ejecución local
 
-1. Clonar el repositorio:
+### 1. Clona el repositorio
 
+### 2. Configura la base de datos
+- Crea una base de datos SQL Server (puedes usar SQL Server Express o una instancia local/remota).
+- Actualiza la cadena de conexión en `src/CreditApp.API/appsettings.json`:
+  ```json
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=creditapp;User Id=sa;Password=TuPassword;TrustServerCertificate=True;"
+  }
+  ```
 
-2. Configurar la base de datos:
-   - Crear una base de datos SQL Server llamada `CreditAppDb`
-   - Actualizar la cadena de conexión en `appsettings.json`
-
-3. Restaurar dependencias:
+### 3. Restaura dependencias y aplica migraciones
 ```bash
 dotnet restore
+cd src/CreditApp.API
+dotnet ef database update
 ```
 
-4. Aplicar migraciones:
-```bash
-dotnet ef database update --project src/CreditApp.Infrastructure --startup-project src/CreditApp.API
-```
-
-5. Ejecutar la aplicación:
+### 4. Ejecuta la aplicación
 ```bash
 dotnet run --project src/CreditApp.API
 ```
+La API estará disponible en `http://localhost:5219` o el puerto configurado.
 
-## Endpoints de la API
+---
 
-### Autenticación
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/register` - Registrar nuevo usuario
 
-### Solicitudes de Crédito
-- `POST /api/creditrequest` - Crear solicitud
-- `GET /api/creditrequest/my-requests` - Ver mis solicitudes
-- `GET /api/creditrequest` - Ver todas las solicitudes (Analista)
-- `PUT /api/creditrequest/{id}/status` - Actualizar estado (Analista)
+## Endpoints principales
+- `POST /api/auth/login` — Login de usuario
+- `POST /api/auth/register` — Registro de usuario
+- `GET /api/auth/whoami` — Información del usuario autenticado
+- `GET /api/creditrequest` — Listado paginado de solicitudes (requiere rol Analista)
+- `POST /api/creditrequest` — Crear solicitud de crédito
+- `PUT /api/creditrequest/{id}/status` — Cambiar estado (requiere rol Analista)
+- `DELETE /api/creditrequest/{id}` — Eliminar solicitud
 
-## Usuarios por Defecto
-```
-Usuario Regular:
-- Email: user1@example.com
-- Password: Password123!
-
-Analista:
-- Email: analyst1@example.com
-- Password: Password123!
-
-Administrador:
-- Email: admin1@example.com
-- Password: Password123!
-```
-
-## Características de Seguridad
-- Autenticación JWT
-- Contraseñas hasheadas con BCrypt
-- Validación de roles
-- Protección contra inyección SQL
-- Auditoría de acciones
-
-## Manejo de Errores
-- Respuestas HTTP apropiadas
-- Mensajes de error descriptivos
-- Logging de errores
-- Validación de datos 
+---
