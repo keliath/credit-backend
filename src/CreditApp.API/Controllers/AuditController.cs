@@ -7,7 +7,7 @@ namespace CreditApp.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Analista")]
+[Authorize(Roles = "Analyst")]
 public class AuditController : ControllerBase
 {
     private readonly IAuditService _auditService;

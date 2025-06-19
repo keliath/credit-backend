@@ -13,40 +13,22 @@ namespace CreditApp.Application.Services
     public class CreditRequestService : ICreditRequestService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public CreditRequestService(ApplicationDbContext context)
+        public CreditRequestService(ApplicationDbContext context, IAuditService auditService)
         {
             _context = context;
-        }
-
-        public async Task<CreditRequest> CreateAsync(
-            Guid userId,
-            decimal amount,
-            string currency,
-            int termInMonths,
-            decimal monthlyIncome,
-            string monthlyIncomeCurrency,
-            int workSeniorityYears,
-            string purpose)
-        {
-            var request = new CreditRequest(
-                userId,
-                Money.Create(amount, currency),
-                termInMonths,
-                Money.Create(monthlyIncome, monthlyIncomeCurrency),
-                workSeniorityYears,
-                purpose);
-
-            _context.CreditRequests.Add(request);
-            await _context.SaveChangesAsync();
-            return request;
+            _auditService = auditService;
         }
 
         public async Task<CreditRequest> GetByIdAsync(Guid id)
         {
-            return await _context.CreditRequests
+            var entity = await _context.CreditRequests
                 .Include(cr => cr.User)
                 .FirstOrDefaultAsync(cr => cr.Id == id);
+            if (entity == null)
+                throw new KeyNotFoundException("No se encontró la solicitud de crédito");
+            return entity;
         }
 
         public async Task<IEnumerable<CreditRequest>> GetByUserIdAsync(Guid userId)
@@ -74,19 +56,31 @@ namespace CreditApp.Application.Services
                 .ToListAsync();
         }
 
-        public async Task<CreditRequest> UpdateStatusAsync(
-            Guid id,
-            string newStatus,
-            string? rejectionReason = null,
-            string? approvedBy = null)
+        public async Task<PagedResult<CreditRequest>> GetAllPagedAsync(int page = 1, int size = 10, string? status = null)
         {
-            var request = await _context.CreditRequests.FindAsync(id);
-            if (request == null)
-                throw new KeyNotFoundException("Credit request not found");
+            var query = _context.CreditRequests
+                .Include(cr => cr.User)
+                .AsQueryable();
 
-            request.UpdateStatus(newStatus, rejectionReason, approvedBy);
-            await _context.SaveChangesAsync();
-            return request;
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(cr => cr.Status == status);
+            }
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(cr => cr.CreatedAt)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+
+            return new PagedResult<CreditRequest>
+            {
+                Items = items,
+                Page = page,
+                Size = size,
+                TotalCount = totalCount
+            };
         }
     }
 } 

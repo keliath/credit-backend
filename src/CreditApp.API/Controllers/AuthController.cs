@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using CreditApp.Application.DTOs;
 using CreditApp.Application.Services;
 using System.Security.Claims;
+using MediatR;
 
 namespace CreditApp.API.Controllers
 {
@@ -20,16 +21,18 @@ namespace CreditApp.API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
+        public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, [FromServices] IMediator mediator)
         {
             try
             {
-                var response = await _authService.LoginAsync(request);
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var command = new LoginCommand(request.Email, request.Password, ip);
+                var response = await mediator.Send(command);
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Unauthorized(new { message = ex.Message });
+                return Unauthorized(new { message = "Credenciales inválidas o error de autenticación" });
             }
         }
 
@@ -39,22 +42,27 @@ namespace CreditApp.API.Controllers
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                    return Unauthorized(new { message = "No se pudo identificar al usuario" });
+                var userId = Guid.Parse(userIdClaim);
                 var response = await _authService.GetCurrentUserAsync(userId);
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Unauthorized(new { message = ex.Message });
+                return Unauthorized(new { message = "No se pudo identificar al usuario" });
             }
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
+        public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request, [FromServices] IMediator mediator)
         {
             try
             {
-                var response = await _authService.RegisterAsync(request);
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var command = new RegisterCommand(request.Username, request.Email, request.Password, ip);
+                var response = await mediator.Send(command);
                 return Ok(response);
             }
             catch (Exception ex)

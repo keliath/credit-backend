@@ -29,10 +29,10 @@ namespace CreditApp.Application.Services
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
         {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-                throw new InvalidOperationException("Email already registered");
+                throw new InvalidOperationException("El correo electrónico ya está registrado");
 
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-                throw new InvalidOperationException("Username already taken");
+                throw new InvalidOperationException("El nombre de usuario ya está en uso");
 
             var user = new User(
                 request.Username,
@@ -53,10 +53,10 @@ namespace CreditApp.Application.Services
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                throw new InvalidOperationException("Invalid email or password");
+                throw new InvalidOperationException("Correo electrónico o contraseña inválidos");
 
             if (!user.IsActive)
-                throw new InvalidOperationException("Account is deactivated");
+                throw new InvalidOperationException("La cuenta está desactivada");
 
             user.UpdateLastLogin();
             await _context.SaveChangesAsync();
@@ -68,10 +68,10 @@ namespace CreditApp.Application.Services
         public async Task<AuthResponse> RegisterAnalystAsync(RegisterRequest request)
         {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-                throw new InvalidOperationException("Email already registered");
+                throw new InvalidOperationException("El correo electrónico ya está registrado");
 
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-                throw new InvalidOperationException("Username already taken");
+                throw new InvalidOperationException("El nombre de usuario ya está en uso");
 
             var user = new User(
                 request.Username,
@@ -91,10 +91,10 @@ namespace CreditApp.Application.Services
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("Usuario no encontrado");
 
             if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
-                throw new UnauthorizedAccessException("Current password is incorrect");
+                throw new UnauthorizedAccessException("La contraseña actual es incorrecta");
 
             user.UpdatePassword(BCrypt.Net.BCrypt.HashPassword(newPassword));
             await _context.SaveChangesAsync();
@@ -105,10 +105,10 @@ namespace CreditApp.Application.Services
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("Usuario no encontrado");
 
             if (await _context.Users.AnyAsync(u => u.Email == newEmail && u.Id != userId))
-                throw new ArgumentException("Email is already registered");
+                throw new ArgumentException("El correo electrónico ya está registrado");
 
             user.UpdateEmail(newEmail);
             await _context.SaveChangesAsync();
@@ -119,10 +119,10 @@ namespace CreditApp.Application.Services
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("Usuario no encontrado");
 
             if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
-                throw new UnauthorizedAccessException("Current password is incorrect");
+                throw new UnauthorizedAccessException("La contraseña actual es incorrecta");
 
             user.UpdatePassword(BCrypt.Net.BCrypt.HashPassword(newPassword));
             await _context.SaveChangesAsync();
@@ -133,10 +133,10 @@ namespace CreditApp.Application.Services
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("Usuario no encontrado");
 
             if (!user.IsActive)
-                throw new InvalidOperationException("Account is deactivated");
+                throw new InvalidOperationException("La cuenta está desactivada");
 
             var token = GenerateJwtToken(user);
             return new AuthResponse(token, user.Username, user.Email, user.Role.ToString());

@@ -10,10 +10,10 @@ namespace CreditApp.Domain.ValueObjects
         private Money(decimal amount, string currency)
         {
             if (amount < 0)
-                throw new ArgumentException("Amount cannot be negative", nameof(amount));
+                throw new ArgumentException("El monto no puede ser negativo", nameof(amount));
             
             if (string.IsNullOrWhiteSpace(currency))
-                throw new ArgumentException("Currency cannot be empty", nameof(currency));
+                throw new ArgumentException("La moneda no puede estar vacía", nameof(currency));
 
             Amount = amount;
             Currency = currency.ToUpper();
@@ -27,7 +27,7 @@ namespace CreditApp.Domain.ValueObjects
         public static Money operator +(Money left, Money right)
         {
             if (left.Currency != right.Currency)
-                throw new InvalidOperationException("Cannot add money with different currencies");
+                throw new InvalidOperationException("No se puede sumar dinero con diferentes monedas");
 
             return new Money(left.Amount + right.Amount, left.Currency);
         }
@@ -35,7 +35,7 @@ namespace CreditApp.Domain.ValueObjects
         public static Money operator -(Money left, Money right)
         {
             if (left.Currency != right.Currency)
-                throw new InvalidOperationException("Cannot subtract money with different currencies");
+                throw new InvalidOperationException("No se puede restar dinero con diferentes monedas");
 
             return new Money(left.Amount - right.Amount, left.Currency);
         }

@@ -63,23 +63,23 @@ namespace CreditApp.Infrastructure.Data
         public async Task<IEnumerable<CreditRequest>> GetCreditRequestsByUserAsync(Guid userId)
         {
             return await CreditRequests
-                .FromSqlRaw("EXEC [dbo].[GetCreditRequestsByUser] @UserId", 
+                .FromSqlRaw("EXEC [dbo].[GetCreditRequestsByUser] @UserId",
                     new Microsoft.Data.SqlClient.SqlParameter("@UserId", userId))
                 .ToListAsync();
         }
 
         public async Task UpdateCreditRequestStatusAsync(
-            Guid creditRequestId, 
-            string newStatus, 
-            string rejectionReason = null, 
-            string approvedBy = null)
+            Guid creditRequestId,
+            string newStatus,
+            string rejectionReason = null!,
+            string approvedBy = null!)
         {
             await Database.ExecuteSqlRawAsync(
                 "EXEC [dbo].[UpdateCreditRequestStatus] @CreditRequestId, @NewStatus, @RejectionReason, @ApprovedBy",
                 new Microsoft.Data.SqlClient.SqlParameter("@CreditRequestId", creditRequestId),
                 new Microsoft.Data.SqlClient.SqlParameter("@NewStatus", newStatus),
-                new Microsoft.Data.SqlClient.SqlParameter("@RejectionReason", (object)rejectionReason ?? DBNull.Value),
-                new Microsoft.Data.SqlClient.SqlParameter("@ApprovedBy", (object)approvedBy ?? DBNull.Value));
+                new Microsoft.Data.SqlClient.SqlParameter("@RejectionReason", (object?)rejectionReason ?? DBNull.Value),
+                new Microsoft.Data.SqlClient.SqlParameter("@ApprovedBy", (object?)approvedBy ?? DBNull.Value));
         }
     }
-} 
+}

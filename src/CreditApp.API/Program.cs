@@ -6,6 +6,8 @@ using Microsoft.OpenApi.Models;
 using CreditApp.Application.Services;
 using CreditApp.Infrastructure.Data;
 using CreditApp.Infrastructure.Data.Seeders;
+using MediatR;
+using CreditApp.Application.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,13 +19,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("La clave JWT no está configurada");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateIssuer = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidateAudience = true,
@@ -86,6 +89,11 @@ builder.Services.AddSwaggerGen(c =>
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICreditRequestService, CreditRequestService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+
+// Register MediatR
+builder.Services.AddMediatR(typeof(UpdateCreditRequestStatusHandler).Assembly);
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
 
 // Add CORS configuration
 builder.Services.AddCors(options =>

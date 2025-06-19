@@ -12,7 +12,13 @@ namespace CreditApp.Domain.Entities
         public string PerformedBy { get; private set; }
         public DateTime Timestamp { get; private set; }
 
-        private AuditLog() { } // For EF Core
+        private AuditLog()
+        {
+            EntityName = string.Empty;
+            Action = string.Empty;
+            Details = string.Empty;
+            PerformedBy = string.Empty;
+        }
 
         public AuditLog(string entityName, Guid entityId, string action, string details, string performedBy)
         {

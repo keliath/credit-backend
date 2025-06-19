@@ -2,28 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CreditApp.Domain.Entities;
+using CreditApp.Application.DTOs;
 
 namespace CreditApp.Application.Services
 {
     public interface ICreditRequestService
     {
-        Task<CreditRequest> CreateAsync(
-            Guid userId,
-            decimal amount,
-            string currency,
-            int termInMonths,
-            decimal monthlyIncome,
-            string monthlyIncomeCurrency,
-            int workSeniorityYears,
-            string purpose);
-
         Task<CreditRequest> GetByIdAsync(Guid id);
         Task<IEnumerable<CreditRequest>> GetByUserIdAsync(Guid userId);
         Task<IEnumerable<CreditRequest>> GetAllAsync(string? status = null);
-        Task<CreditRequest> UpdateStatusAsync(
-            Guid id,
-            string newStatus,
-            string? rejectionReason = null,
-            string? approvedBy = null);
+        Task<PagedResult<CreditRequest>> GetAllPagedAsync(int page = 1, int size = 10, string? status = null);
     }
 } 

@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CreditApp.Application.Services;
+using CreditApp.Application.DTOs;
 using System.Security.Claims;
 using CreditApp.Domain.Entities;
+using MediatR;
 
 namespace CreditApp.API.Controllers
 {
@@ -21,12 +23,16 @@ namespace CreditApp.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CreditRequest>> Create(CreateCreditRequestRequest request)
+        public async Task<ActionResult<CreditRequestResponse>> Create(CreateCreditRequestRequest request, [FromServices] IMediator mediator)
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var response = await _creditRequestService.CreateAsync(
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var username = User.FindFirst(ClaimTypes.Name)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(username))
+                    return Unauthorized(new { message = "No se pudo identificar al usuario" });
+                var userId = Guid.Parse(userIdClaim);
+                var command = new CreateCreditRequestCommand(
                     userId,
                     request.Amount,
                     request.Currency,
@@ -34,12 +40,15 @@ namespace CreditApp.API.Controllers
                     request.MonthlyIncome,
                     request.MonthlyIncomeCurrency,
                     request.WorkSeniorityYears,
-                    request.Purpose);
+                    request.Purpose,
+                    username
+                );
+                var response = await mediator.Send(command);
                 return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { message = "No se encontró la solicitud de crédito" });
             }
             catch (ArgumentException ex)
             {
@@ -55,53 +64,73 @@ namespace CreditApp.API.Controllers
                 var response = await _creditRequestService.GetByIdAsync(id);
                 return Ok(response);
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { message = "No se encontró la solicitud de crédito" });
             }
         }
 
         [Authorize(Roles = "Analyst")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CreditRequest>>> GetAll([FromQuery] string? status = null)
+        public async Task<ActionResult<PagedResult<CreditRequest>>> GetAll([FromQuery] string? status = null, [FromQuery] int page = 1, [FromQuery] int size = 10)
         {
-            var response = await _creditRequestService.GetAllAsync(status);
+            var response = await _creditRequestService.GetAllPagedAsync(page, size, status);
             return Ok(response);
         }
 
         [HttpGet("my-requests")]
         public async Task<ActionResult<IEnumerable<CreditRequest>>> GetMyRequests()
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized(new { message = "No se pudo identificar al usuario" });
+            var userId = Guid.Parse(userIdClaim);
             var response = await _creditRequestService.GetByUserIdAsync(userId);
-            return Ok(response);
+            return Ok(response ?? new List<CreditRequest>());
         }
 
         [Authorize(Roles = "Analyst")]
         [HttpPut("{id}/status")]
-        public async Task<ActionResult<CreditRequest>> UpdateStatus(
+        public async Task<ActionResult<CreditRequestResponse>> UpdateStatus(
             Guid id,
-            [FromBody] UpdateCreditRequestStatusRequest request)
+            [FromBody] UpdateCreditRequestStatusRequest request,
+            [FromServices] IMediator mediator)
         {
             try
             {
                 var approvedBy = User.FindFirst(ClaimTypes.Name)?.Value;
-                var response = await _creditRequestService.UpdateStatusAsync(
+                if (string.IsNullOrEmpty(approvedBy))
+                    return Unauthorized(new { message = "No se pudo identificar al usuario" });
+                var command = new UpdateCreditRequestStatusCommand(
                     id,
                     request.Status,
                     request.RejectionReason,
-                    approvedBy);
-
+                    approvedBy
+                );
+                var response = await mediator.Send(command);
                 return Ok(response);
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { message = "No se encontró la solicitud de crédito" });
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id, [FromServices] IMediator mediator)
+        {
+            var username = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (string.IsNullOrEmpty(username))
+                return Unauthorized(new { message = "No se pudo identificar al usuario" });
+            var command = new DeleteCreditRequestCommand(id, username);
+            var result = await mediator.Send(command);
+            if (!result)
+                return NotFound(new { message = "No se encontró la solicitud de crédito" });
+            return NoContent();
         }
     }
 
