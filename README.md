@@ -31,9 +31,22 @@ Backend para la gestión de solicitudes de crédito con autenticación JWT, role
   }
   ```
 
+## Con Docker
 ### 3. Restaura dependencias y aplica migraciones
 ```bash
 dotnet restore
+dotnet ef database update --project src/CreditApp.Infrastructure --startup-project src/CreditApp.API
+```
+
+## Sin Docker
+
+### 3. Restaura dependencias y aplica migraciones
+```bash
+dotnet restore
+
+- En caso de que se usen migraciones
+dotnet ef migrations add InitialCreate --project src/CreditApp.Infrastructure --startup-project src/CreditApp.API 
+
 dotnet ef database update --project src/CreditApp.Infrastructure --startup-project src/CreditApp.API
 ```
 

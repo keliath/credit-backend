@@ -1,0 +1,11 @@
+services:
+  api:
+    environment:
+      - SQLSERVER_CONNECTION=Server=db;Database=creditapp;User Id=sa;Password=Strong!Passw0rd123456;TrustServerCertificate=True;
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./src:/src:delegated
+    ports:
+      - "5219:80"
+    entrypoint: ["/entrypoint.sh"]
+ 

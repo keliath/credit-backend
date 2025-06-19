@@ -16,6 +16,22 @@ public static class DatabaseSeeder
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        // Retry para esperar a que SQL Server esté listo
+        var maxRetries = 10;
+        for (int i = 0; i < maxRetries; i++)
+        {
+            try
+            {
+                await context.Database.MigrateAsync();
+                break;
+            }
+            catch (Exception ex) when (i < maxRetries - 1)
+            {
+                Console.WriteLine($"Intento {i + 1} de conexión a SQL fallido. Esperando 5 segundos... Error: {ex.Message}");
+                await Task.Delay(5000);
+            }
+        }
+
         // Seed Users
         if (!await context.Users.AnyAsync())
         {

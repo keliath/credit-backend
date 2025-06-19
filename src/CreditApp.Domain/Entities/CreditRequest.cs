@@ -17,8 +17,6 @@ namespace CreditApp.Domain.Entities
         public string RejectionReason { get; private set; } = string.Empty;
         public string ApprovedBy { get; private set; } = string.Empty;
         public DateTime? ApprovedAt { get; private set; }
-        public new DateTime CreatedAt { get; private set; }
-        public new DateTime? UpdatedAt { get; private set; }
 
         private CreditRequest() { } // For EF Core
 

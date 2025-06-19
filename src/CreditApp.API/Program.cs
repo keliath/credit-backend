@@ -14,9 +14,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                      ?? Environment.GetEnvironmentVariable("SQLSERVER_CONNECTION");
+
 // Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("La clave JWT no está configurada");
@@ -128,6 +131,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await DatabaseSeeder.SeedAsync(services);
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        var readyMessage = "🚀✅ ¡La aplicación está lista y operativa! Puedes acceder a la API ahora.";
+        logger.LogInformation(readyMessage);
+        Console.WriteLine($"\n{new string('=', 60)}\n{readyMessage}\n{new string('=', 60)}\n");
     }
     catch (Exception ex)
     {
