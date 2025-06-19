@@ -34,8 +34,7 @@ Backend para la gestión de solicitudes de crédito con autenticación JWT, role
 ### 3. Restaura dependencias y aplica migraciones
 ```bash
 dotnet restore
-cd src/CreditApp.API
-dotnet ef database update
+dotnet ef database update --project src/CreditApp.Infrastructure --startup-project src/CreditApp.API
 ```
 
 ### 4. Ejecuta la aplicación
@@ -46,6 +45,12 @@ La API estará disponible en `http://localhost:5219` o el puerto configurado.
 
 ---
 
+## Usuarios de prueba:
+  email: analyst1@example.com
+  password: Password123!
+
+  email: user1@example.com
+  password: Password123!
 
 ## Endpoints principales
 - `POST /api/auth/login` — Login de usuario
