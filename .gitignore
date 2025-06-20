@@ -43,7 +43,7 @@ publish/
 *.ldf
 
 # EF Migrations
-**/Migrations/
+# **/Migrations/
 
 # Logs
 *.log
