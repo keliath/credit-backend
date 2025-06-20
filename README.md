@@ -73,5 +73,7 @@ La API estará disponible en `http://localhost:5219` o el puerto configurado.
 - `POST /api/creditrequest` — Crear solicitud de crédito
 - `PUT /api/creditrequest/{id}/status` — Cambiar estado (requiere rol Analista)
 - `DELETE /api/creditrequest/{id}` — Eliminar solicitud
+- `GET /api/creditrequest/export` — Exportar solicitudes a Excel (requiere rol Analista)
+- `POST /api/creditrequest/export` — Exportar solicitudes a Excel con filtros (requiere rol Analista)
 
 ---

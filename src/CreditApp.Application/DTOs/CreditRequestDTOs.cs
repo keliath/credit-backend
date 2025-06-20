@@ -42,6 +42,39 @@ namespace CreditApp.Application.DTOs
         DateTime? ApprovedAt
     );
 
+    public record CreditRequestDetailResponse(
+        Guid Id,
+        Guid UserId,
+        UserInfo User,
+        MoneyInfo Amount,
+        MoneyInfo MonthlyIncome,
+        int WorkSeniorityYears,
+        int TermInMonths,
+        string Purpose,
+        string Status,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt,
+        string? RejectionReason,
+        string? ApprovedBy,
+        DateTime? ApprovedAt
+    );
+
+    public record CreditRequestMyRequestsResponse(
+        Guid Id,
+        UserInfo User,
+        MoneyInfo Amount,
+        MoneyInfo MonthlyIncome,
+        int WorkSeniorityYears,
+        int TermInMonths,
+        string Purpose,
+        string Status,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt,
+        string? RejectionReason,
+        string? ApprovedBy,
+        DateTime? ApprovedAt
+    );
+
     public record UpdateCreditRequestStatusRequest(
         string Status,
         string? RejectionReason = null
@@ -55,6 +88,32 @@ namespace CreditApp.Application.DTOs
         string Status,
         DateTime CreatedAt,
         DateTime? UpdatedAt
+    );
+
+    public record CreditRequestAnalystResponse(
+        Guid Id,
+        UserInfo User,
+        MoneyInfo Amount,
+        MoneyInfo MonthlyIncome,
+        int WorkSeniorityYears,
+        int TermInMonths,
+        string Purpose,
+        string Status,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt,
+        string? RejectionReason,
+        string? ApprovedBy,
+        DateTime? ApprovedAt
+    );
+
+    public record UserInfo(
+        string Username,
+        string Email
+    );
+
+    public record MoneyInfo(
+        decimal Amount,
+        string Currency
     );
 
     // MediatR Command
@@ -101,5 +160,29 @@ namespace CreditApp.Application.DTOs
         public string Action => "Delete";
         public string Details => $"Credit request deleted";
         public string PerformedBy => Username;
+    }
+
+    public record CreditRequestExportDTO
+    {
+        public Guid Id { get; init; }
+        public string Username { get; init; } = string.Empty;
+        public string Email { get; init; } = string.Empty;
+        public decimal Amount { get; init; }
+        public decimal MonthlyIncome { get; init; }
+        public int TermInMonths { get; init; }
+        public int WorkSeniorityYears { get; init; }
+        public string Purpose { get; init; } = string.Empty;
+        public string Status { get; init; } = string.Empty;
+        public string? RejectionReason { get; init; }
+        public string? ApprovedBy { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public DateTime? ApprovedAt { get; init; }
+        public DateTime? UpdatedAt { get; init; }
+    }
+
+    public class ExportCreditRequestsRequest
+    {
+        public string? Status { get; set; }
+        public string? Format { get; set; } = "excel"; // excel, csv
     }
 } 
