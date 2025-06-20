@@ -7,6 +7,7 @@ using CreditApp.Application.DTOs;
 using System.Security.Claims;
 using CreditApp.Domain.Entities;
 using MediatR;
+using CreditApp.Application.Handlers;
 
 namespace CreditApp.API.Controllers
 {
@@ -57,12 +58,28 @@ namespace CreditApp.API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<CreditRequest>> GetById(Guid id)
+        public async Task<ActionResult<CreditRequestDetailResponse>> GetById(Guid id)
         {
             try
             {
-                var response = await _creditRequestService.GetByIdAsync(id);
-                return Ok(response);
+                var cr = await _creditRequestService.GetByIdAsync(id);
+                var dto = new CreditRequestDetailResponse(
+                    cr.Id,
+                    cr.UserId,
+                    new UserInfo(cr.User.Username, cr.User.Email),
+                    new MoneyInfo(cr.Amount.Amount, cr.Amount.Currency),
+                    new MoneyInfo(cr.MonthlyIncome.Amount, cr.MonthlyIncome.Currency),
+                    cr.WorkSeniorityYears,
+                    cr.TermInMonths,
+                    cr.Purpose,
+                    cr.Status,
+                    cr.CreatedAt,
+                    cr.UpdatedAt,
+                    string.IsNullOrEmpty(cr.RejectionReason) ? null : cr.RejectionReason,
+                    string.IsNullOrEmpty(cr.ApprovedBy) ? null : cr.ApprovedBy,
+                    cr.ApprovedAt
+                );
+                return Ok(dto);
             }
             catch (KeyNotFoundException)
             {
@@ -72,21 +89,57 @@ namespace CreditApp.API.Controllers
 
         [Authorize(Roles = "Analyst")]
         [HttpGet]
-        public async Task<ActionResult<PagedResult<CreditRequest>>> GetAll([FromQuery] string? status = null, [FromQuery] int page = 1, [FromQuery] int size = 10)
+        public async Task<ActionResult<PagedResult<CreditRequestAnalystResponse>>> GetAll([FromQuery] string? status = null, [FromQuery] int page = 1, [FromQuery] int size = 10)
         {
             var response = await _creditRequestService.GetAllPagedAsync(page, size, status);
-            return Ok(response);
+            var dto = new PagedResult<CreditRequestAnalystResponse>
+            {
+                Items = response.Items.Select(cr => new CreditRequestAnalystResponse(
+                    cr.Id,
+                    new UserInfo(cr.User.Username, cr.User.Email),
+                    new MoneyInfo(cr.Amount.Amount, cr.Amount.Currency),
+                    new MoneyInfo(cr.MonthlyIncome.Amount, cr.MonthlyIncome.Currency),
+                    cr.WorkSeniorityYears,
+                    cr.TermInMonths,
+                    cr.Purpose,
+                    cr.Status,
+                    cr.CreatedAt,
+                    cr.UpdatedAt,
+                    string.IsNullOrEmpty(cr.RejectionReason) ? null : cr.RejectionReason,
+                    string.IsNullOrEmpty(cr.ApprovedBy) ? null : cr.ApprovedBy,
+                    cr.ApprovedAt
+                )),
+                Page = response.Page,
+                Size = response.Size,
+                TotalCount = response.TotalCount
+            };
+            return Ok(dto);
         }
 
         [HttpGet("my-requests")]
-        public async Task<ActionResult<IEnumerable<CreditRequest>>> GetMyRequests()
+        public async Task<ActionResult<IEnumerable<CreditRequestMyRequestsResponse>>> GetMyRequests()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized(new { message = "No se pudo identificar al usuario" });
             var userId = Guid.Parse(userIdClaim);
             var response = await _creditRequestService.GetByUserIdAsync(userId);
-            return Ok(response ?? new List<CreditRequest>());
+            var dto = response.Select(cr => new CreditRequestMyRequestsResponse(
+                cr.Id,
+                new UserInfo(cr.User.Username, cr.User.Email),
+                new MoneyInfo(cr.Amount.Amount, cr.Amount.Currency),
+                new MoneyInfo(cr.MonthlyIncome.Amount, cr.MonthlyIncome.Currency),
+                cr.WorkSeniorityYears,
+                cr.TermInMonths,
+                cr.Purpose,
+                cr.Status,
+                cr.CreatedAt,
+                cr.UpdatedAt,
+                string.IsNullOrEmpty(cr.RejectionReason) ? null : cr.RejectionReason,
+                string.IsNullOrEmpty(cr.ApprovedBy) ? null : cr.ApprovedBy,
+                cr.ApprovedAt
+            ));
+            return Ok(dto);
         }
 
         [Authorize(Roles = "Analyst")]
@@ -131,6 +184,58 @@ namespace CreditApp.API.Controllers
             if (!result)
                 return NotFound(new { message = "No se encontró la solicitud de crédito" });
             return NoContent();
+        }
+
+        [Authorize(Roles = "Analyst")]
+        [HttpPost("export")]
+        public async Task<IActionResult> ExportToExcel(
+            [FromServices] IMediator mediator,
+            [FromBody] ExportCreditRequestsRequest? request = null)
+        {
+            try
+            {
+                // Si no se envía request, crear uno por defecto
+                var exportRequest = request ?? new ExportCreditRequestsRequest();
+                
+                var query = new ExportCreditRequestsQuery(exportRequest);
+                var excelBytes = await mediator.Send(query);
+                
+                var fileName = $"solicitudes_credito_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error al generar el reporte: {ex.Message}" });
+            }
+        }
+
+        [Authorize(Roles = "Analyst")]
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportToExcelGet(
+            [FromServices] IMediator mediator,
+            [FromQuery] string? status = null,
+            [FromQuery] string? format = "excel")
+        {
+            try
+            {
+                var exportRequest = new ExportCreditRequestsRequest
+                {
+                    Status = status,
+                    Format = format
+                };
+                
+                var query = new ExportCreditRequestsQuery(exportRequest);
+                var excelBytes = await mediator.Send(query);
+                
+                var fileName = $"solicitudes_credito_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error al generar el reporte: {ex.Message}" });
+            }
         }
     }
 

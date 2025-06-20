@@ -38,14 +38,13 @@ namespace CreditApp.Infrastructure.Data
             modelBuilder.Entity<CreditRequest>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Amount).HasPrecision(18, 2);
                 entity.Property(e => e.Purpose).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.RejectionReason).HasMaxLength(500);
                 entity.Property(e => e.ApprovedBy).HasMaxLength(50);
 
                 entity.HasOne(cr => cr.User)
-                    .WithMany()
+                    .WithMany(u => u.CreditRequests)
                     .HasForeignKey(cr => cr.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
             });

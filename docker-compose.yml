@@ -1,0 +1,50 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ConnectionStrings__DefaultConnection=Server=db;Database=creditapp;User Id=sa;Password=Strong!Passw0rd123456;TrustServerCertificate=True;
+      # - TODO: Hasta que se tenga el JWT configurado como variable de entorno, se deja comentado
+      # - Jwt__Key=${JWT_KEY:-your-super-secret-key-with-at-least-32-characters}
+      # - Jwt__Issuer=${JWT_ISSUER:-credit-app}
+      # - Jwt__Audience=${JWT_AUDIENCE:-credit-app-users}
+      # - Jwt__ExpiryInHours=${JWT_EXPIRY_HOURS:-3}
+    depends_on:
+      - db
+    networks:
+      - credit-network
+    volumes:
+      - ./src:/src:delegated
+
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Strong!Passw0rd123456
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    command: >
+      bash -c "
+        /opt/mssql/bin/sqlservr & \
+        sleep 20 && \
+        /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P $${SA_PASSWORD} -i /docker-entrypoint-initdb.d/init-db.sql \
+        wait
+      "
+    networks:
+      - credit-network
+
+networks:
+  credit-network:
+    driver: bridge
+
+volumes:
+  sqldata: 
